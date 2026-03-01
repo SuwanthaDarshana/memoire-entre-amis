@@ -1,11 +1,20 @@
+// components/layout/Sidebar.tsx
 "use client"
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
+// Type for each nav item
+type NavItem = {
+  label: string
+  href: string
+  icon: string
+  isAdminOnly: boolean
+}
+
 // Navigation items — isAdminOnly means only shown to admins
-const navItems = [
+const navItems: NavItem[] = [
   { label: 'Dashboard',   href: '/dashboard', icon: '🏠', isAdminOnly: false },
   { label: 'Albums',      href: '/albums',    icon: '📸', isAdminOnly: false },
   { label: 'Upload',      href: '/upload',    icon: '⬆️',  isAdminOnly: true  },
@@ -13,7 +22,7 @@ const navItems = [
   { label: 'Settings',    href: '/settings',  icon: '⚙️',  isAdminOnly: false },
 ]
 
-export default function Sidebar({ isAdmin }) {
+export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname()
 
   // Filter items based on role

@@ -80,7 +80,7 @@ export default function LoginPage() {
       </form>
 
       <p className="text-center text-xs text-gray-400 mt-6">
-        Don't have an account? Contact the admin.
+        Don&apos;t have an account? Contact the admin.
       </p>
     </div>
   )
