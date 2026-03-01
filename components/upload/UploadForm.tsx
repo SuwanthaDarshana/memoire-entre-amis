@@ -2,7 +2,12 @@
 
 import { useState, useRef } from "react";
 import toast from "react-hot-toast";
-import type { Album } from "@/app/(main)/albums/page";
+
+// Lean album type — only what the upload form needs
+type AlbumOption = {
+  id: string;
+  title: string;
+};
 
 // Type for Cloudinary's upload response
 type CloudinaryUploadResponse = {
@@ -26,7 +31,7 @@ type SignData = {
 
 // Props type
 type UploadFormProps = {
-  albums: Album[];
+  albums: AlbumOption[];
   onUploadComplete?: () => void;
 };
 
@@ -158,15 +163,19 @@ export default function UploadForm({
       <div>
         <label className="label">Photos & Videos</label>
         <div
-          className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 transition-colors"
+          className="border-2 border-dashed border-zinc-200 rounded-2xl p-10 text-center cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all duration-200 group"
           onClick={() => fileInputRef.current?.click()}
         >
-          <p className="text-4xl mb-2">📁</p>
-          <p className="text-gray-500 text-sm">
-            Click to select files, or drag and drop
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-100 group-hover:bg-indigo-100 transition-colors mb-3">
+            <svg className="w-6 h-6 text-zinc-400 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+          </div>
+          <p className="text-zinc-600 text-sm font-medium">
+            Click to select files
           </p>
-          <p className="text-gray-400 text-xs mt-1">
-            Photos: JPG, PNG, WebP • Videos: MP4, MOV, WebM
+          <p className="text-zinc-300 text-xs mt-1">
+            JPG, PNG, WebP, MP4, MOV, WebM
           </p>
           <input
             ref={fileInputRef}
@@ -184,15 +193,15 @@ export default function UploadForm({
             {files.map((file, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2"
+                className="flex items-center justify-between text-sm bg-zinc-50 rounded-xl px-4 py-2.5 border border-zinc-100"
               >
-                <span className="truncate text-gray-700">{file.name}</span>
-                <div className="flex items-center gap-2 ml-4 shrink-0">
-                  <span className="text-gray-400">
+                <span className="truncate text-zinc-700 font-medium">{file.name}</span>
+                <div className="flex items-center gap-2.5 ml-4 shrink-0">
+                  <span className="text-zinc-300 text-xs">
                     {(file.size / 1024 / 1024).toFixed(1)}MB
                   </span>
                   {progress[i] === 100 && (
-                    <span className="text-green-500">✓</span>
+                    <span className="text-green-500 text-sm">✓</span>
                   )}
                 </div>
               </div>

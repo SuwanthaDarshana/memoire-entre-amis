@@ -64,11 +64,12 @@ export default function CreateUserModal({ onUserCreated }: CreateUserModalProps)
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-full max-w-md z-50 shadow-xl">
-          <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
+        <Dialog.Overlay className="dialog-overlay" />
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title className="text-lg font-bold text-zinc-900 mb-1">
             Create Account
           </Dialog.Title>
+          <p className="text-sm text-zinc-400 mb-5">Add a new friend to the group</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

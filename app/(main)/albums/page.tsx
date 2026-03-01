@@ -36,8 +36,8 @@ export default async function AlbumsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Albums</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {albums?.length || 0} albums
+          <p className="text-zinc-400 text-sm mt-1">
+            {albums?.length || 0} album{(albums?.length || 0) !== 1 ? 's' : ''}
           </p>
         </div>
         {profile?.role === 'admin' && <CreateAlbumModal />}

@@ -15,9 +15,11 @@ export default function MediaGrid({ media }: { media: Media[] }) {
 
   if (media.length === 0) {
     return (
-      <div className="text-center py-20">
-        <p className="text-5xl mb-4">🖼️</p>
-        <p className="text-gray-500">
+      <div className="text-center py-24">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-zinc-100 mb-4">
+          <span className="text-3xl">🖼️</span>
+        </div>
+        <p className="text-zinc-400 text-sm">
           No memories here yet. Ask the admin to upload some!
         </p>
       </div>

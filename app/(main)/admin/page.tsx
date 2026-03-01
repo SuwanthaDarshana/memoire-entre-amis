@@ -33,8 +33,8 @@ export default async function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">User Management</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {users?.length || 0} accounts total
+          <p className="text-zinc-400 text-sm mt-1">
+            {users?.length || 0} account{(users?.length || 0) !== 1 ? 's' : ''} total
           </p>
         </div>
         <CreateUserModal />

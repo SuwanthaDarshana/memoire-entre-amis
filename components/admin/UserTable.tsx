@@ -48,12 +48,12 @@ function DeleteUserButton({ userId, userName, onDeleted }: DeleteUserButtonProps
       </AlertDialog.Trigger>
 
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <AlertDialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-6 w-full max-w-sm z-50 shadow-xl">
-          <AlertDialog.Title className="font-semibold text-gray-900">
+        <AlertDialog.Overlay className="dialog-overlay" />
+        <AlertDialog.Content className="dialog-content max-w-sm">
+          <AlertDialog.Title className="font-bold text-zinc-900">
             Delete Account
           </AlertDialog.Title>
-          <AlertDialog.Description className="text-sm text-gray-500 mt-2">
+          <AlertDialog.Description className="text-sm text-zinc-500 mt-2 leading-relaxed">
             Are you sure you want to delete <strong>{userName}</strong>&apos;s account?
             This cannot be undone.
           </AlertDialog.Description>
@@ -90,31 +90,31 @@ export default function UserTable({ users }: UserTableProps) {
   }
 
   return (
-    <div className="card p-0 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
       <table className="w-full">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="bg-zinc-50/80 border-b border-zinc-100">
           <tr>
-            <th className="text-left text-xs font-semibold text-gray-500 uppercase px-6 py-3">Name</th>
-            <th className="text-left text-xs font-semibold text-gray-500 uppercase px-6 py-3">Username</th>
-            <th className="text-left text-xs font-semibold text-gray-500 uppercase px-6 py-3">Role</th>
-            <th className="text-left text-xs font-semibold text-gray-500 uppercase px-6 py-3">Joined</th>
-            <th className="text-left text-xs font-semibold text-gray-500 uppercase px-6 py-3">Actions</th>
+            <th className="text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-6 py-3.5">Name</th>
+            <th className="text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-6 py-3.5">Username</th>
+            <th className="text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-6 py-3.5">Role</th>
+            <th className="text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-6 py-3.5">Joined</th>
+            <th className="text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider px-6 py-3.5">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-zinc-50">
           {userList.map((user) => (
-            <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4 text-sm font-medium text-gray-900">
+            <tr key={user.id} className="hover:bg-zinc-50/50 transition-colors">
+              <td className="px-6 py-4 text-sm font-semibold text-zinc-900">
                 {user.full_name}
               </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
+              <td className="px-6 py-4 text-sm text-zinc-400 font-mono">
                 @{user.username}
               </td>
               <td className="px-6 py-4">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                <span className={`badge ${
                   user.role === 'admin'
-                    ? 'bg-indigo-100 text-indigo-700'
-                    : 'bg-gray-100 text-gray-600'
+                    ? 'badge-accent'
+                    : 'badge-muted'
                 }`}>
                   {user.role}
                 </span>

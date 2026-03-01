@@ -9,34 +9,39 @@ export default function AlbumCard({ album }: { album: Album }) {
 
   return (
     <Link href={`/albums/${album.id}`} className="group block">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-zinc-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
 
         {/* Cover image */}
-        <div className="aspect-video bg-gradient-to-br from-indigo-100 to-purple-100 relative overflow-hidden">
+        <div className="aspect-16/10 bg-linear-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden">
           {album.cover_url ? (
             <Image
               src={album.cover_url}
               alt={album.title}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-4xl">📸</div>
+            <div className="flex items-center justify-center h-full">
+              <span className="text-4xl opacity-60" style={{ animation: 'float 5s ease-in-out infinite' }}>📸</span>
+            </div>
           )}
+          {/* Item count badge */}
+          <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-zinc-700 text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm">
+            {photoCount} {photoCount === 1 ? 'item' : 'items'}
+          </div>
         </div>
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 truncate">{album.title}</h3>
+          <h3 className="font-bold text-zinc-900 truncate group-hover:text-indigo-600 transition-colors">{album.title}</h3>
           {album.description && (
-            <p className="text-sm text-gray-500 truncate mt-0.5">{album.description}</p>
+            <p className="text-sm text-zinc-400 truncate mt-0.5">{album.description}</p>
           )}
-          <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-            <span>{photoCount} items</span>
-            {album.event_date && (
-              <span>{format(new Date(album.event_date), 'MMM d, yyyy')}</span>
-            )}
-          </div>
+          {album.event_date && (
+            <p className="text-xs text-zinc-300 mt-2.5 font-medium">
+              {format(new Date(album.event_date), 'MMM d, yyyy')}
+            </p>
+          )}
         </div>
 
       </div>
