@@ -2,7 +2,7 @@
 
 > *Our university memories, together.*
 
-A private, invite-only photo and video sharing platform for university friends. The admin controls all accounts — friends simply log in and relive the memories.
+A private, invite-only photo and video sharing platform for university friends. The admin controls all accounts — friends simply log in, upload memories, and relive them together.
 
 ---
 
@@ -17,11 +17,9 @@ A private, invite-only photo and video sharing platform for university friends. 
 - [Environment Variables](#-environment-variables)
 - [Cloudinary Setup](#-cloudinary-setup)
 - [Authentication & Roles](#-authentication--roles)
-- [Feature Roadmap](#-feature-roadmap)
 - [Getting Started](#-getting-started)
 - [Deployment](#-deployment)
 - [Security Checklist](#-security-checklist)
-- [Claude Agent Prompts](#-claude-agent-prompts)
 - [Resources](#-resources)
 
 ---
@@ -29,16 +27,18 @@ A private, invite-only photo and video sharing platform for university friends. 
 ## 📖 Overview
 
 ### What this app does
-- **Admin (you)** creates and manages all user accounts
-- **Friends** log in, browse albums, and only change their own password
-- **Photos & videos** are uploaded to Cloudinary and metadata saved in Supabase
+- **Admin (you)** creates and manages all user accounts, albums, and has full control
+- **Friends** log in, browse albums, upload photos & videos, and change their own password
+- **Photos** are auto-compressed client-side before upload (max 2400px, JPEG 85%)
+- **Videos** must be under 10MB (Cloudinary free plan limit — cannot be compressed client-side)
+- **Media** is uploaded to Cloudinary and metadata saved in Supabase
 - Everything is **free to host** with no expiry
 
 ### User Roles
 | Role | Permissions |
 |---|---|
-| `admin` | Create accounts, delete accounts, upload media, create albums, manage everything |
-| `member` | View albums, view media, change own password only |
+| `admin` | Create/delete accounts, create/edit/delete albums, upload media, delete any media, manage everything |
+| `member` | View albums, upload photos & videos, change own password |
 
 ---
 
@@ -46,11 +46,12 @@ A private, invite-only photo and video sharing platform for university friends. 
 
 | Layer | Technology | Why |
 |---|---|---|
-| Framework | Next.js 14 (App Router) | Full-stack React, API routes built-in, great DX |
-| Language | JavaScript (ES2022) | No extra TypeScript complexity for this scale |
-| Styling | Tailwind CSS | Fast, utility-first, responsive out of the box |
+| Framework | Next.js 16 (App Router, Turbopack) | Full-stack React, API routes built-in, great DX |
+| Language | TypeScript | Type safety, better IDE support, catch errors early |
+| Styling | Tailwind CSS v4 | Fast, utility-first, responsive out of the box |
 | Auth & Database | Supabase | Free, Postgres, built-in auth, Row Level Security |
 | Media Storage | Cloudinary | 25GB free, auto image/video optimization |
+| UI Components | Radix UI | Accessible dialogs, dropdowns, alert dialogs |
 | Hosting | Vercel | Free, auto-deploy from GitHub, edge network |
 | Version Control | GitHub | Industry standard |
 
@@ -64,7 +65,7 @@ Browser (Client)
       ▼
 Next.js on Vercel
   ├── /app/(auth)/*         → Public pages (login)
-  ├── /app/(main)/*         → Protected pages (dashboard, albums)
+  ├── /app/(main)/*         → Protected pages (dashboard, albums, upload, settings, admin)
   └── /app/api/*            → Server-side API routes
             │
             ├──────────────────────────┐
@@ -77,8 +78,6 @@ Next.js on Vercel
   - Media metadata            - Image optimization
 ```
 
-> **Why monorepo?** Next.js API routes run server-side on Vercel — they are your backend. A separate Express server would add complexity and require a second deployment. For this project scale, monorepo is the industry-standard choice.
-
 ---
 
 ## 🗂️ Project Structure
@@ -86,101 +85,88 @@ Next.js on Vercel
 ```
 memoire-entre-amis/
 │
-├── app/                                  # Next.js App Router
+├── app/
+│   ├── (auth)/
+│   │   └── login/
+│   │       └── page.tsx                  # Login page
 │   │
-│   ├── (auth)/                           # Public route group (no layout)
-│   │   ├── login/
-│   │   │   └── page.jsx                  # Login page
-│   │   └── layout.jsx                    # Auth layout (centered card)
-│   │
-│   ├── (main)/                           # Protected route group
-│   │   ├── layout.jsx                    # Main layout (navbar + sidebar)
+│   ├── (main)/
+│   │   ├── layout.tsx                    # Main layout (navbar + sidebar)
 │   │   ├── dashboard/
-│   │   │   └── page.jsx                  # Recent memories feed
+│   │   │   └── page.tsx                  # Recent memories feed + stats
 │   │   ├── albums/
-│   │   │   ├── page.jsx                  # All albums grid
+│   │   │   ├── page.tsx                  # All albums grid with previews
 │   │   │   └── [id]/
-│   │   │       └── page.jsx              # Single album media grid
+│   │   │       └── page.tsx              # Single album media grid
 │   │   ├── upload/
-│   │   │   └── page.jsx                  # Upload media (admin only)
+│   │   │   └── page.tsx                  # Upload media (all users)
 │   │   ├── admin/
-│   │   │   └── page.jsx                  # Manage users (admin only)
+│   │   │   └── page.tsx                  # User & album management (admin only)
 │   │   └── settings/
-│   │       └── page.jsx                  # Change password (all users)
+│   │       └── page.tsx                  # Profile & password settings
 │   │
-│   ├── api/                              # Server-side API routes (backend)
+│   ├── api/
 │   │   ├── auth/
 │   │   │   └── callback/
-│   │   │       └── route.js              # Supabase OAuth callback handler
+│   │   │       └── route.ts              # Supabase OAuth callback handler
 │   │   ├── admin/
 │   │   │   ├── create-user/
-│   │   │   │   └── route.js              # POST: create new user account
+│   │   │   │   └── route.ts              # POST: create new user account
 │   │   │   └── delete-user/
-│   │   │       └── route.js              # DELETE: remove user account
+│   │   │       └── route.ts              # DELETE: remove user account
+│   │   ├── albums/
+│   │   │   ├── route.ts                  # POST: create album
+│   │   │   └── [id]/
+│   │   │       └── route.ts              # PATCH: edit album, DELETE: delete album
+│   │   ├── media/
+│   │   │   └── [id]/
+│   │   │       └── route.ts              # DELETE: delete media (admin only)
 │   │   └── upload/
 │   │       ├── sign/
-│   │       │   └── route.js              # POST: generate signed Cloudinary upload URL
+│   │       │   └── route.ts              # POST: Cloudinary upload signature
 │   │       └── save/
-│   │           └── route.js              # POST: save media metadata to Supabase
+│   │           └── route.ts              # POST: save media metadata
 │   │
-│   ├── layout.jsx                        # Root layout (fonts, providers)
-│   └── globals.css                       # Global styles + Tailwind directives
+│   ├── layout.tsx                        # Root layout (fonts, providers)
+│   ├── page.tsx                          # Landing page
+│   └── globals.css                       # Design system + Tailwind directives
 │
-├── components/                           # Reusable UI components
-│   ├── ui/                               # Base UI primitives
-│   │   ├── Button.jsx
-│   │   ├── Input.jsx
-│   │   ├── Modal.jsx
-│   │   ├── Toast.jsx
-│   │   └── Spinner.jsx
+├── components/
+│   ├── ui/
+│   │   └── BackButton.tsx                # Reusable back navigation
 │   ├── layout/
-│   │   ├── Navbar.jsx
-│   │   ├── Sidebar.jsx
-│   │   └── PageHeader.jsx
+│   │   ├── Navbar.tsx                    # Top navigation bar
+│   │   └── Sidebar.tsx                   # Side nav + mobile bottom tabs
 │   ├── albums/
-│   │   ├── AlbumCard.jsx                 # Album thumbnail card
-│   │   ├── AlbumGrid.jsx                 # Grid of album cards
-│   │   └── CreateAlbumModal.jsx          # Admin: create album form
+│   │   ├── AlbumCard.tsx                 # Album card with photo preview collage
+│   │   ├── AlbumGrid.tsx                 # Grid of album cards
+│   │   ├── CreateAlbumModal.tsx          # Create album dialog
+│   │   └── EditAlbumModal.tsx            # Edit album dialog
 │   ├── media/
-│   │   ├── MediaGrid.jsx                 # Masonry/grid of photos+videos
-│   │   ├── PhotoCard.jsx                 # Individual photo card
-│   │   ├── VideoCard.jsx                 # Individual video card with thumbnail
-│   │   ├── Lightbox.jsx                  # Full-screen photo viewer
-│   │   └── VideoPlayer.jsx              # Full-screen video player
+│   │   ├── MediaGrid.tsx                 # Masonry grid of photos + videos
+│   │   ├── PhotoCard.tsx                 # Photo card with admin delete
+│   │   ├── VideoCard.tsx                 # Video card with admin delete
+│   │   └── Lightbox.tsx                  # Full-screen photo viewer
 │   ├── upload/
-│   │   ├── UploadForm.jsx                # Drag & drop upload form
-│   │   └── UploadProgress.jsx            # Upload progress bar
+│   │   └── UploadForm.tsx                # File upload with compression
 │   └── admin/
-│       ├── UserTable.jsx                 # List of all users
-│       ├── CreateUserModal.jsx           # Create user form
-│       └── DeleteUserButton.jsx          # Delete user with confirmation
+│       ├── UserTable.tsx                 # User management table
+│       ├── CreateUserModal.tsx           # Create user dialog
+│       └── AlbumTable.tsx                # Album management table
 │
-├── lib/                                  # Utilities and config (non-component)
+├── lib/
 │   ├── supabase/
-│   │   ├── client.js                     # Supabase browser client
-│   │   ├── server.js                     # Supabase server client (API routes)
-│   │   └── admin.js                      # Supabase admin client (service_role)
-│   ├── cloudinary.js                     # Cloudinary SDK config
-│   ├── auth.js                           # Auth helper functions
-│   └── utils.js                          # General utility functions
+│   │   ├── client.ts                     # Supabase browser client
+│   │   ├── server.ts                     # Supabase server client (SSR)
+│   │   └── admin.ts                      # Supabase admin client (service_role)
+│   ├── cloudinary.ts                     # Cloudinary SDK config
+│   └── auth.ts                           # Auth helper functions
 │
-├── hooks/                                # Custom React hooks
-│   ├── useAuth.js                        # Current user + role
-│   ├── useAlbums.js                      # Fetch albums from Supabase
-│   └── useMedia.js                       # Fetch media from Supabase
-│
-├── middleware.js                         # Route protection (auth + role check)
-│
-├── public/                               # Static assets
-│   ├── logo.svg
-│   └── favicon.ico
-│
-├── .env.local                            # Local environment variables (never commit)
-├── .env.example                          # Template env file (safe to commit)
-├── .gitignore
-├── next.config.js
-├── tailwind.config.js
-├── jsconfig.json                         # Path aliases (@/components, @/lib, etc.)
+├── middleware.ts                         # Route protection (auth + role check)
+├── .env.local                            # Environment variables (never commit)
+├── next.config.ts
+├── tsconfig.json
+├── tailwind.config.ts
 └── package.json
 ```
 
@@ -346,15 +332,17 @@ create policy "Admin can delete media"
   );
 ```
 
+> **Note:** Media inserts from non-admin users are handled via the service-role admin client in the API route (auth is verified server-side before inserting).
+
 ---
 
 ## 🔌 API Routes
 
-All API routes live in `app/api/` and run **server-side only**. They are the secure bridge between the frontend and Supabase/Cloudinary using secret keys.
+All API routes live in `app/api/` and run **server-side only**.
 
 ### Auth
 
-| Method | Route | Description | Auth Required |
+| Method | Route | Description | Auth |
 |---|---|---|---|
 | `GET` | `/api/auth/callback` | Supabase login redirect handler | No |
 
@@ -365,28 +353,32 @@ All API routes live in `app/api/` and run **server-side only**. They are the sec
 | `POST` | `/api/admin/create-user` | `{ full_name, username, email, password, role }` | Create a new user account |
 | `DELETE` | `/api/admin/delete-user` | `{ user_id }` | Delete a user and their profile |
 
-### Upload
+### Albums
 
 | Method | Route | Body | Description |
 |---|---|---|---|
-| `POST` | `/api/upload/sign` | `{ folder, media_type }` | Returns a signed Cloudinary upload signature |
-| `POST` | `/api/upload/save` | `{ album_id, cloudinary_url, cloudinary_public_id, media_type, ... }` | Save media metadata to Supabase after upload |
+| `POST` | `/api/albums` | `{ title, description?, event_date? }` | Create album (admin only) |
+| `PATCH` | `/api/albums/[id]` | `{ title?, description?, event_date?, cover_url? }` | Update album (admin only) |
+| `DELETE` | `/api/albums/[id]` | — | Delete album + all media (admin only) |
 
-### Response Format (all routes follow this standard)
+### Media
 
-```json
-// Success
-{ "success": true, "data": { ... } }
+| Method | Route | Description |
+|---|---|---|
+| `DELETE` | `/api/media/[id]` | Delete media from Cloudinary + DB (admin only) |
 
-// Error
-{ "success": false, "error": "Human readable error message" }
-```
+### Upload (all authenticated users)
+
+| Method | Route | Body | Description |
+|---|---|---|---|
+| `POST` | `/api/upload/sign` | `{ folder, media_type }` | Get signed Cloudinary upload URL |
+| `POST` | `/api/upload/save` | `{ album_id, cloudinary_url, ... }` | Save media metadata to Supabase |
 
 ---
 
 ## 🔑 Environment Variables
 
-### `.env.example` (commit this to GitHub)
+### `.env.example`
 
 ```env
 # Supabase
@@ -414,7 +406,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | `CLOUDINARY_API_KEY` | Cloudinary → Dashboard → API Key |
 | `CLOUDINARY_API_SECRET` | Cloudinary → Dashboard → API Secret ⚠️ |
 
-> ⚠️ Variables marked are **secret** — only ever use them in `app/api/` routes, never in client components or pages.
+> ⚠️ Variables marked are **secret** — only use them in `app/api/` routes, never in client components.
 
 ---
 
@@ -432,18 +424,10 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
    - Folder: `memoire/videos`
    - Allowed formats: `mp4, mov, avi, webm`
 
-### Media Folder Structure on Cloudinary
-
-```
-memoire/
-├── photos/
-│   ├── {album_id}/
-│   │   ├── photo_abc123.jpg
-│   │   └── photo_def456.webp
-└── videos/
-    └── {album_id}/
-        └── video_ghi789.mp4
-```
+### Free Plan Limits
+- **10MB max file size** per upload
+- Photos are auto-compressed client-side (Canvas API, max 2400px, JPEG 85%)
+- Videos cannot be compressed client-side — must be under 10MB before upload
 
 ---
 
@@ -451,109 +435,28 @@ memoire/
 
 ### Login Flow
 ```
-User visits /login
-     ↓
-Enters email + password
-     ↓
-Supabase validates credentials
-     ↓
-Session cookie set by middleware
-     ↓
-Redirect to /dashboard
+User visits /login → Enters email + password → Supabase validates →
+Session cookie set → Redirect to /dashboard
 ```
 
 ### Admin Creates a User
 ```
-Admin visits /admin
-     ↓
-Fills form: name, username, email, temp password
-     ↓
-POST /api/admin/create-user
-     ↓
-Server uses SUPABASE_SERVICE_ROLE_KEY to create auth user
-     ↓
-Trigger auto-creates profile row with role = 'member'
-     ↓
-Friend receives credentials and logs in
-     ↓
-Friend changes password at /settings
+Admin visits /admin → Fills form → POST /api/admin/create-user →
+Service role creates auth user → Trigger auto-creates profile →
+Friend receives credentials → Logs in → Changes password at /settings
 ```
 
-### Middleware Route Protection (`middleware.js`)
+### Middleware Route Protection
 
-```
-/login              → public (redirect to /dashboard if already logged in)
-/api/auth/callback  → public
-/dashboard          → requires: authenticated
-/albums/*           → requires: authenticated
-/settings           → requires: authenticated
-/upload             → requires: authenticated + role = 'admin'
-/admin              → requires: authenticated + role = 'admin'
-/api/admin/*        → requires: authenticated + role = 'admin'
-/api/upload/*       → requires: authenticated + role = 'admin'
-```
+| Route | Access |
+|---|---|
+| `/login` | Public (redirects to dashboard if logged in) |
+| `/dashboard`, `/albums/*`, `/upload`, `/settings` | Authenticated users |
+| `/admin` | Admin only |
 
 ---
 
-## ✅ Feature Roadmap
-
-### Phase 1 — Project Setup
-- [ ] Initialize Next.js project with Tailwind CSS
-- [ ] Configure `jsconfig.json` path aliases (`@/components`, `@/lib`)
-- [ ] Set up Supabase clients (`client.js`, `server.js`, `admin.js`)
-- [ ] Configure Cloudinary SDK (`lib/cloudinary.js`)
-- [ ] Create `.env.local` from `.env.example`
-- [ ] Run database SQL schema in Supabase
-- [ ] Manually create admin account in Supabase dashboard
-
-### Phase 2 — Auth & Middleware
-- [ ] Build login page (`/login`)
-- [ ] Build `middleware.js` for route + role protection
-- [ ] Build `/api/auth/callback` route
-- [ ] Build `useAuth` hook
-
-### Phase 3 — Admin Panel
-- [ ] Build `/admin` page with user table
-- [ ] Build `CreateUserModal` component
-- [ ] Build `/api/admin/create-user` route
-- [ ] Build `/api/admin/delete-user` route
-- [ ] Build `DeleteUserButton` with confirmation dialog
-
-### Phase 4 — Albums
-- [ ] Build `/albums` page with album grid
-- [ ] Build `AlbumCard` component
-- [ ] Build `CreateAlbumModal` (admin only)
-- [ ] Build `/albums/[id]` single album page
-
-### Phase 5 — Media Upload
-- [ ] Build `/upload` page (admin only)
-- [ ] Build `UploadForm` with drag & drop
-- [ ] Build `/api/upload/sign` route (Cloudinary signature)
-- [ ] Build `/api/upload/save` route (save metadata)
-- [ ] Build `UploadProgress` component
-
-### Phase 6 — Media Browsing
-- [ ] Build `MediaGrid` component
-- [ ] Build `PhotoCard` component
-- [ ] Build `VideoCard` with thumbnail
-- [ ] Build `Lightbox` for full-screen photo viewing
-- [ ] Build `VideoPlayer` for full-screen playback
-
-### Phase 7 — Settings
-- [ ] Build `/settings` page
-- [ ] Change password form using `supabase.auth.updateUser()`
-
-### Phase 8 — Polish
-- [ ] Mobile responsive design (all pages)
-- [ ] Loading skeletons for all data-fetching components
-- [ ] Toast notifications for all actions
-- [ ] Error boundary components
-- [ ] Empty states (no albums yet, no media yet)
-- [ ] Album cover photo (first photo in album auto-set as cover)
-
----
-
-## 🚀 Getting Started (Local Development)
+## 🚀 Getting Started
 
 ```bash
 # 1. Clone the repo
@@ -565,109 +468,44 @@ npm install
 
 # 3. Set up environment variables
 cp .env.example .env.local
-# Fill in your values in .env.local
+# Fill in your Supabase and Cloudinary values
 
-# 4. Run the development server
+# 4. Run the database schema
+# Copy the SQL from the Database Schema section above
+# Paste into Supabase SQL Editor and run
+
+# 5. Create your admin account
+# In Supabase → Authentication → Users → Add user
+# Then update the profile's role to 'admin' in the profiles table
+
+# 6. Start the dev server
 npm run dev
-
-# 5. Open in browser
-# http://localhost:3000
-```
-
-### Required npm Packages
-
-```bash
-# Core
-npx create-next-app@latest memoire-entre-amis --tailwind --app --src-dir=false --import-alias "@/*"
-
-# Supabase
-npm install @supabase/supabase-js @supabase/ssr
-
-# Cloudinary
-npm install cloudinary next-cloudinary
-
-# UI Utilities
-npm install react-hot-toast
-npm install date-fns
-npm install clsx
-
-# Optional UI Components
-npm install @radix-ui/react-dialog
-npm install @radix-ui/react-dropdown-menu
-npm install @radix-ui/react-alert-dialog
+# Open http://localhost:3000
 ```
 
 ---
 
 ## 🚢 Deployment (Vercel)
 
-1. Push your code to GitHub (`git push origin main`)
+1. Push your code to GitHub
 2. Go to [vercel.com](https://vercel.com) → **Add New Project** → import your GitHub repo
-3. Add all environment variables from `.env.local` in Vercel's **Environment Variables** settings
+3. Add all environment variables from `.env.local`
 4. Click **Deploy**
-5. After deploy, copy your Vercel URL and update `NEXT_PUBLIC_SITE_URL` in Vercel env vars
+5. Update `NEXT_PUBLIC_SITE_URL` to your Vercel URL
 6. Every `git push` to `main` will auto-deploy
 
 ---
 
 ## 🛡️ Security Checklist
 
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` only used in `app/api/` — never imported in components or pages
-- [ ] `CLOUDINARY_API_SECRET` only used in `app/api/upload/sign/route.js`
-- [ ] All Supabase tables have RLS enabled with correct policies
-- [ ] `middleware.js` protects all admin routes both by auth and by role
-- [ ] Admin role is also verified server-side in every `/api/admin/*` route (don't trust client alone)
-- [ ] Cloudinary upload presets are **Signed** (not unsigned)
-- [ ] `.env.local` is in `.gitignore`
-- [ ] No API keys or secrets hardcoded anywhere in source code
-- [ ] `NEXT_PUBLIC_*` variables contain no secrets (they are visible to browser)
-
----
-
-## 🤖 Claude Agent Prompts
-
-Use these prompts when working with Claude agent mode. Always share this README first.
-
-```
-"Read the README and set up the Supabase clients in lib/supabase/client.js,
-lib/supabase/server.js, and lib/supabase/admin.js using the SSR package."
-```
-
-```
-"Build the login page at app/(auth)/login/page.jsx using Supabase email/password auth.
-On success redirect to /dashboard."
-```
-
-```
-"Create middleware.js that protects routes based on the auth and role rules
-defined in the README's middleware section."
-```
-
-```
-"Build the /api/admin/create-user route using the Supabase admin client to
-create a new user with full_name, username, email, password, and role from the request body."
-```
-
-```
-"Build the /api/upload/sign route that generates a signed Cloudinary upload
-signature using the folder and media_type from the request body."
-```
-
-```
-"Build the UploadForm component with drag-and-drop support that calls
-/api/upload/sign to get a signature, uploads directly to Cloudinary,
-then calls /api/upload/save to store the metadata."
-```
-
-```
-"Build the /albums/[id]/page.jsx that fetches all media for the album
-from Supabase and renders them in a responsive grid using MediaGrid component."
-```
-
-```
-"Build the Lightbox component that shows full-size photos with prev/next
-navigation when a PhotoCard is clicked."
-```
+- [x] `SUPABASE_SERVICE_ROLE_KEY` only used in `app/api/` routes
+- [x] `CLOUDINARY_API_SECRET` only used in `app/api/upload/sign`
+- [x] All Supabase tables have RLS enabled
+- [x] Middleware protects admin routes by auth + role
+- [x] Admin role verified server-side in every admin API route
+- [x] Cloudinary upload presets are **Signed**
+- [x] `.env.local` is in `.gitignore`
+- [x] No secrets hardcoded in source code
 
 ---
 
@@ -680,8 +518,8 @@ navigation when a PhotoCard is clicked."
 | Supabase RLS Guide | https://supabase.com/docs/guides/database/postgres/row-level-security |
 | Cloudinary Next.js SDK | https://next.cloudinary.dev |
 | Cloudinary Signed Uploads | https://cloudinary.com/documentation/upload_images#signed_upload |
-| Tailwind CSS Docs | https://tailwindcss.com/docs |
-| Vercel Deployment | https://vercel.com/docs/deployments/overview |
+| Tailwind CSS v4 | https://tailwindcss.com/docs |
+| Radix UI | https://www.radix-ui.com/primitives |
 
 ---
 
