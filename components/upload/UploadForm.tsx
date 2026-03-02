@@ -4,7 +4,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB — Cloudinary free plan limit
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB — Cloudinary free plan image limit
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB — Cloudinary free plan video limit
 const MAX_IMAGE_DIMENSION = 2400; // px — resize larger images to this
 const JPEG_QUALITY = 0.85;
 
@@ -63,7 +64,7 @@ async function compressImage(file: File): Promise<File> {
   // Skip non-image files
   if (!file.type.startsWith("image/")) return file;
   // If already under limit, skip compression
-  if (file.size <= MAX_FILE_SIZE) return file;
+  if (file.size <= MAX_IMAGE_SIZE) return file;
   // Skip formats the browser can't decode (HEIC, TIFF, RAW, etc.)
   if (!COMPRESSIBLE_TYPES.has(file.type)) return file;
 
@@ -144,18 +145,18 @@ export default function UploadForm({
 
     // Validate video sizes upfront (videos can't be compressed client-side)
     const oversizedVideos = selected.filter(
-      (f) => f.type.startsWith("video/") && f.size > MAX_FILE_SIZE
+      (f) => f.type.startsWith("video/") && f.size > MAX_VIDEO_SIZE
     );
     if (oversizedVideos.length > 0) {
       const names = oversizedVideos
         .map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
         .join(", ");
       toast.error(
-        `Videos must be under 10MB. Unlike photos, videos cannot be compressed automatically. Please trim or compress before uploading: ${names}`
+        `Videos must be under 100MB. Please trim or compress before uploading: ${names}`
       );
       // Filter out oversized videos, keep everything else
       const valid = selected.filter(
-        (f) => !(f.type.startsWith("video/") && f.size > MAX_FILE_SIZE)
+        (f) => !(f.type.startsWith("video/") && f.size > MAX_VIDEO_SIZE)
       );
       setFiles(valid);
       setProgress(valid.map(() => 0));
@@ -174,9 +175,11 @@ export default function UploadForm({
     const processedFile = isVideo ? file : await compressImage(file);
 
     // Final size check
-    if (processedFile.size > MAX_FILE_SIZE) {
+    const sizeLimit = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+    const limitLabel = isVideo ? '100MB' : '10MB';
+    if (processedFile.size > sizeLimit) {
       throw new Error(
-        `${file.name} is ${(processedFile.size / 1024 / 1024).toFixed(1)}MB — max is 10MB. Try a smaller file.`
+        `${file.name} is ${(processedFile.size / 1024 / 1024).toFixed(1)}MB — max is ${limitLabel}. Try a smaller file.`
       );
     }
 
