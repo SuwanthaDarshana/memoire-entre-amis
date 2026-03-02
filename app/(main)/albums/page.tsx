@@ -3,6 +3,12 @@ import { requireAuth, getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import AlbumGrid from '@/components/albums/AlbumGrid'
 import CreateAlbumModal from '@/components/albums/CreateAlbumModal'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Albums',
+  description: 'Browse all your shared photo and video albums.',
+}
 
 // Type for album row from Supabase
 export type Album = {

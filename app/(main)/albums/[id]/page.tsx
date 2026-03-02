@@ -6,6 +6,7 @@ import MediaGrid from '@/components/media/MediaGrid'
 import EditAlbumModal from '@/components/albums/EditAlbumModal'
 import BackButton from '@/components/ui/BackButton'
 import { format } from 'date-fns'
+import type { Metadata } from 'next'
 
 // Type for media row from Supabase
 export type Media = {
@@ -27,6 +28,22 @@ export type Media = {
 // Type for the page params — [id] from the URL
 type AlbumPageProps = {
   params: Promise<{ id: string }>   // ← Promise in Next.js 15+
+}
+
+// Dynamic metadata based on album title
+export async function generateMetadata({ params }: AlbumPageProps): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: album } = await supabase
+    .from('albums')
+    .select('title, description')
+    .eq('id', id)
+    .single()
+
+  return {
+    title: album?.title || 'Album',
+    description: album?.description || 'View photos and videos in this album.',
+  }
 }
 
 export default async function AlbumPage({ params }: AlbumPageProps) {

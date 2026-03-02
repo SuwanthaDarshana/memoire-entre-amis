@@ -6,6 +6,12 @@ import UserTable from '@/components/admin/UserTable'
 import AlbumTable from '@/components/admin/AlbumTable'
 import CreateAlbumModal from '@/components/albums/CreateAlbumModal'
 import BackButton from '@/components/ui/BackButton'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Admin Panel',
+  description: 'Manage users and albums.',
+}
 
 // Type for a profile row from Supabase
 export type Profile = {

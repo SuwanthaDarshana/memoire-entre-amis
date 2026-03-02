@@ -4,6 +4,12 @@ import { getProfile } from "@/lib/auth";
 import AlbumCard from "@/components/albums/AlbumCard";
 import Link from "next/link";
 import type { Album } from "@/app/(main)/albums/page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'View your recent memories and quick stats.',
+};
 
 export default async function DashboardPage() {
   await requireAuth();

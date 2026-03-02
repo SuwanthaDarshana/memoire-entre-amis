@@ -3,6 +3,12 @@ import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import UploadForm from '@/components/upload/UploadForm'
 import BackButton from '@/components/ui/BackButton'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Upload',
+  description: 'Upload photos and videos to your albums.',
+}
 
 export default async function UploadPage() {
   await requireAuth()

@@ -15,8 +15,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mémoire entre Amis",
-  description: "Our university memories, together.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: {
+    default: 'Mémoire entre Amis — University Memories Together',
+    template: '%s | Mémoire entre Amis',
+  },
+  description: 'A private, invite-only platform for university friends to collect, share, and relive their best moments together. Photos, videos, and memories — all in one place.',
+  keywords: ['university memories', 'photo sharing', 'private album', 'friends', 'college photos', 'group memories'],
+  authors: [{ name: 'CyberDog' }],
+  creator: 'CyberDog',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'Mémoire entre Amis',
+    title: 'Mémoire entre Amis — University Memories Together',
+    description: 'A private space for university friends to collect, share, and relive the moments that made your years unforgettable.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mémoire entre Amis — University Memories Together',
+    description: 'A private space for university friends to collect, share, and relive the moments that made your years unforgettable.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
