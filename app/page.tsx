@@ -139,7 +139,7 @@ export default async function LandingPage() {
       </div>
 
       {/* ══════════════ NAVIGATION ══════════════ */}
-      <nav className="relative z-20 flex items-center justify-between px-6 sm:px-10 lg:px-16 py-5 max-w-7xl mx-auto">
+      <nav className="relative z-20 flex items-center justify-between px-6 sm:px-10 lg:px-20 xl:px-28 py-5 max-w-[1800px] mx-auto">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
             <span className="text-white text-sm font-black tracking-tighter">M</span>
@@ -169,7 +169,7 @@ export default async function LandingPage() {
       </nav>
 
       {/* ══════════════ HERO ══════════════ */}
-      <section className="relative z-10 px-6 pt-16 sm:pt-24 lg:pt-32 pb-20 max-w-7xl mx-auto">
+      <section className="relative z-10 px-6 sm:px-10 lg:px-20 xl:px-28 pt-16 sm:pt-24 lg:pt-32 pb-20 max-w-[1800px] mx-auto">
         <div className="max-w-4xl mx-auto text-center">
           {/* Pill badge */}
           <div
@@ -260,7 +260,7 @@ export default async function LandingPage() {
 
         {/* ── Hero Visual: App Mockup ── */}
         <div
-          className="relative mt-20 lg:mt-28 max-w-5xl mx-auto"
+          className="relative mt-20 lg:mt-28 max-w-6xl mx-auto"
           style={{ animation: 'slideUp 0.9s ease forwards 0.5s', opacity: 0, animationFillMode: 'forwards' }}
         >
           {/* Browser chrome */}
@@ -373,7 +373,7 @@ export default async function LandingPage() {
 
       {/* ══════════════ LOGOS / TECH STRIP ══════════════ */}
       <section className="relative z-10 py-12 border-y border-zinc-100/60">
-        <div className="max-w-5xl mx-auto px-6 text-center">
+        <div className="max-w-[1800px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 text-center">
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-6">Built with modern technologies</p>
           <div className="flex items-center justify-center gap-8 sm:gap-12 flex-wrap opacity-40">
             {['Next.js', 'React', 'TypeScript', 'Supabase', 'Cloudinary', 'Tailwind'].map((tech) => (
@@ -384,7 +384,7 @@ export default async function LandingPage() {
       </section>
 
       {/* ══════════════ FEATURES BENTO ══════════════ */}
-      <section id="features" className="relative z-10 px-6 py-24 lg:py-32 max-w-6xl mx-auto">
+      <section id="features" className="relative z-10 px-6 sm:px-10 lg:px-20 xl:px-28 py-24 lg:py-32 max-w-[1800px] mx-auto">
         <div className="text-center mb-16">
           <div
             className="inline-flex items-center gap-2 text-indigo-600 mb-4"
@@ -409,11 +409,11 @@ export default async function LandingPage() {
         </div>
 
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className={`bento-card group ${i === 0 ? 'md:row-span-2' : ''}`}
+              className={`bento-card group ${i === 0 ? 'md:row-span-2 xl:col-span-2 xl:row-span-2' : ''}`}
               style={{
                 animation: `slideUp 0.5s ease forwards ${0.1 + i * 0.1}s`,
                 opacity: 0,
@@ -465,8 +465,8 @@ export default async function LandingPage() {
       </section>
 
       {/* ══════════════ HOW IT WORKS ══════════════ */}
-      <section className="relative z-10 px-6 py-24 lg:py-32 bg-zinc-50/50">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative z-10 px-6 sm:px-10 lg:px-20 xl:px-28 py-24 lg:py-32 bg-zinc-50/50">
+        <div className="max-w-[1800px] mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-zinc-900">
               Get started in{' '}
@@ -520,8 +520,8 @@ export default async function LandingPage() {
       </section>
 
       {/* ══════════════ CTA SECTION ══════════════ */}
-      <section className="relative z-10 px-6 py-24 lg:py-32">
-        <div className="max-w-3xl mx-auto text-center">
+      <section className="relative z-10 px-6 sm:px-10 lg:px-20 xl:px-28 py-24 lg:py-32">
+        <div className="max-w-5xl mx-auto text-center">
           <div className="relative bg-linear-to-br from-zinc-900 via-zinc-800 to-zinc-900 rounded-3xl px-8 sm:px-16 py-16 sm:py-20 overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 dot-grid opacity-10 pointer-events-none" />
@@ -551,7 +551,7 @@ export default async function LandingPage() {
 
       {/* ══════════════ FOOTER ══════════════ */}
       <footer className="relative z-10 border-t border-zinc-100 py-10">
-        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-[1800px] mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <span className="text-white text-[10px] font-black">M</span>
