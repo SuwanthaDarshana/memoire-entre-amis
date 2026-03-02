@@ -41,16 +41,33 @@ type UploadFormProps = {
 };
 
 /**
+ * Image formats the browser can reliably decode via Canvas.
+ * HEIC/HEIF (iPhone default) and other exotic formats must be
+ * skipped and uploaded as-is — Cloudinary handles them server-side.
+ */
+const COMPRESSIBLE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/bmp",
+  "image/gif",
+]);
+
+/**
  * Compress an image file client-side using Canvas.
  * Resizes to fit within MAX_IMAGE_DIMENSION and re-encodes as JPEG.
+ * Falls back to the original file when the browser can't decode the
+ * format (e.g. HEIC from iPhones) — Cloudinary will process it instead.
  */
 async function compressImage(file: File): Promise<File> {
   // Skip non-image files
   if (!file.type.startsWith("image/")) return file;
   // If already under limit, skip compression
   if (file.size <= MAX_FILE_SIZE) return file;
+  // Skip formats the browser can't decode (HEIC, TIFF, RAW, etc.)
+  if (!COMPRESSIBLE_TYPES.has(file.type)) return file;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
 
@@ -74,12 +91,20 @@ async function compressImage(file: File): Promise<File> {
       canvas.height = height;
 
       const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("Canvas not supported"));
+      if (!ctx) {
+        // Canvas unsupported — upload original
+        resolve(file);
+        return;
+      }
       ctx.drawImage(img, 0, 0, width, height);
 
       canvas.toBlob(
         (blob) => {
-          if (!blob) return reject(new Error("Compression failed"));
+          if (!blob) {
+            // Compression failed — upload original
+            resolve(file);
+            return;
+          }
           const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
             type: "image/jpeg",
             lastModified: Date.now(),
@@ -93,7 +118,9 @@ async function compressImage(file: File): Promise<File> {
 
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image for compression"));
+      // Browser can't decode this format — upload as-is and let Cloudinary handle it
+      console.warn(`Browser cannot decode ${file.type} — skipping client compression`);
+      resolve(file);
     };
 
     img.src = url;
