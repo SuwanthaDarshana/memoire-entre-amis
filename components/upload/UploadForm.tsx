@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB — Cloudinary free plan limit
+const MAX_IMAGE_DIMENSION = 2400; // px — resize larger images to this
+const JPEG_QUALITY = 0.85;
 
 // Lean album type — only what the upload form needs
 type AlbumOption = {
@@ -16,7 +21,7 @@ type CloudinaryUploadResponse = {
   thumbnail_url: string;
   width: number;
   height: number;
-  duration?: number; // ← optional, only exists for videos
+  duration?: number;
   bytes: number;
 };
 
@@ -35,10 +40,71 @@ type UploadFormProps = {
   onUploadComplete?: () => void;
 };
 
+/**
+ * Compress an image file client-side using Canvas.
+ * Resizes to fit within MAX_IMAGE_DIMENSION and re-encodes as JPEG.
+ */
+async function compressImage(file: File): Promise<File> {
+  // Skip non-image files
+  if (!file.type.startsWith("image/")) return file;
+  // If already under limit, skip compression
+  if (file.size <= MAX_FILE_SIZE) return file;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      let { width, height } = img;
+
+      // Scale down if larger than max dimension
+      if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+        const ratio = Math.min(
+          MAX_IMAGE_DIMENSION / width,
+          MAX_IMAGE_DIMENSION / height
+        );
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not supported"));
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("Compression failed"));
+          const compressed = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          resolve(compressed);
+        },
+        "image/jpeg",
+        JPEG_QUALITY
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image for compression"));
+    };
+
+    img.src = url;
+  });
+}
+
 export default function UploadForm({
   albums,
   onUploadComplete,
 }: UploadFormProps) {
+  const router = useRouter();
   const [selectedAlbum, setSelectedAlbum] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
@@ -55,6 +121,17 @@ export default function UploadForm({
   async function uploadFileToCloudinary(file: File, index: number) {
     const isVideo = file.type.startsWith("video/");
     const media_type = isVideo ? "video" : "photo";
+
+    // Compress large images client-side before upload
+    const processedFile = isVideo ? file : await compressImage(file);
+
+    // Final size check
+    if (processedFile.size > MAX_FILE_SIZE) {
+      throw new Error(
+        `${file.name} is ${(processedFile.size / 1024 / 1024).toFixed(1)}MB — max is 10MB. Try a smaller file.`
+      );
+    }
+
     const folder = `memoire/${isVideo ? "videos" : "photos"}/${selectedAlbum}`;
 
     // Step 1: Get signature from our server
@@ -63,13 +140,23 @@ export default function UploadForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ folder, media_type }),
     });
+
+    if (!signResponse.ok) {
+      const err = await signResponse.json().catch(() => ({}));
+      throw new Error(err.error || `Sign failed (${signResponse.status})`);
+    }
+
     const { data: signData }: { data: SignData } = await signResponse.json();
+
+    if (!signData?.api_key || !signData?.signature) {
+      throw new Error("Invalid sign response from server");
+    }
 
     // Step 2: Upload directly to Cloudinary
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", processedFile);
     formData.append("api_key", signData.api_key);
-    formData.append("timestamp", String(signData.timestamp)); // ← convert to string
+    formData.append("timestamp", String(signData.timestamp));
     formData.append("signature", signData.signature);
     formData.append("upload_preset", signData.upload_preset);
     formData.append("folder", folder);
@@ -78,10 +165,20 @@ export default function UploadForm({
       `https://api.cloudinary.com/v1_1/${signData.cloud_name}/${isVideo ? "video" : "image"}/upload`,
       { method: "POST", body: formData },
     );
+
+    if (!uploadResponse.ok) {
+      const err = await uploadResponse.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Cloudinary upload failed (${uploadResponse.status})`);
+    }
+
     const uploadData: CloudinaryUploadResponse = await uploadResponse.json();
 
+    if (!uploadData.secure_url) {
+      throw new Error("Cloudinary did not return a URL");
+    }
+
     // Step 3: Save metadata to Supabase
-    await fetch("/api/upload/save", {
+    const saveResponse = await fetch("/api/upload/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -101,6 +198,11 @@ export default function UploadForm({
         file_size_bytes: uploadData.bytes,
       }),
     });
+
+    if (!saveResponse.ok) {
+      const err = await saveResponse.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to save media record (${saveResponse.status})`);
+    }
 
     // Update progress
     setProgress((prev) => {
@@ -127,12 +229,14 @@ export default function UploadForm({
       setCaption("");
       setProgress([]);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // ← null check before accessing
+        fileInputRef.current.value = "";
       }
+      router.refresh();
       onUploadComplete?.();
     } catch (err) {
-      toast.error("Upload failed. Please try again.");
-      console.error(err);
+      const message = err instanceof Error ? err.message : "Upload failed";
+      toast.error(message);
+      console.error("Upload error:", err);
     }
 
     setUploading(false);

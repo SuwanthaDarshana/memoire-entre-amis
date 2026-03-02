@@ -33,6 +33,18 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
   const { id } = await params       // ← await params in Next.js 15+
   const supabase = await createClient()
 
+  // Get current user & check if admin
+  const { data: { user } } = await supabase.auth.getUser()
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    isAdmin = profile?.role === 'admin'
+  }
+
   // Fetch the album
   const { data: album } = await supabase
     .from('albums')
@@ -77,7 +89,7 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
       </div>
 
       {/* Media grid */}
-      <MediaGrid media={(media as Media[]) || []} />
+      <MediaGrid media={(media as Media[]) || []} isAdmin={isAdmin} />
     </div>
   )
 }

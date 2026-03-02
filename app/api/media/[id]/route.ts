@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
+import { revalidatePath } from 'next/cache'
 
 type RouteParams = {
   params: Promise<{ id: string }>
@@ -37,7 +38,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   // Fetch the media item to get Cloudinary public_id
   const { data: media, error: fetchError } = await supabase
     .from('media')
-    .select('cloudinary_public_id, media_type')
+    .select('cloudinary_public_id, media_type, album_id')
     .eq('id', id)
     .single()
 
@@ -67,6 +68,11 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
       { status: 400 }
     )
   }
+
+  // Revalidate relevant pages
+  revalidatePath(`/albums/${media.album_id}`)
+  revalidatePath('/albums')
+  revalidatePath('/dashboard')
 
   return NextResponse.json({ success: true })
 }

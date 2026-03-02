@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Type for the request body
@@ -79,6 +80,11 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  // Bust cache so album pages show new uploads immediately
+  revalidatePath(`/albums/${album_id}`);
+  revalidatePath('/albums');
+  revalidatePath('/dashboard');
 
   return NextResponse.json({ success: true, data });
 }
