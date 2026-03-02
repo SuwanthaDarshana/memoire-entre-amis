@@ -2,6 +2,8 @@
 
 > *Our university memories, together.*
 
+**🔗 Live:** [memoire-entre-amis.vercel.app](https://memoire-entre-amis.vercel.app)
+
 A private, invite-only photo and video sharing platform for university friends. The admin controls all accounts — friends simply log in, upload memories, and relive them together.
 
 ---
