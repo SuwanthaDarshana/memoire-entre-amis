@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse, type NextRequest } from 'next/server'
+import { validateOrigin } from '@/lib/security'
 
 // Type for the request body
 type DeleteUserBody = {
@@ -9,6 +10,10 @@ type DeleteUserBody = {
 }
 
 export async function DELETE(request: NextRequest) {
+  // CSRF protection
+  const csrfError = validateOrigin(request)
+  if (csrfError) return csrfError
+
   // Verify admin
   const supabase = await createClient()       // ← await added
   const { data: { user } } = await supabase.auth.getUser()
@@ -43,6 +48,15 @@ export async function DELETE(request: NextRequest) {
     )
   }
 
+  // Validate UUID format
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_REGEX.test(user_id)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid user ID format' },
+      { status: 400 }
+    )
+  }
+
   // Prevent admin from deleting themselves
   if (user_id === user.id) {
     return NextResponse.json(
@@ -56,8 +70,9 @@ export async function DELETE(request: NextRequest) {
   const { error } = await adminClient.auth.admin.deleteUser(user_id)
 
   if (error) {
+    console.error('Failed to delete user:', error.message)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to delete user. Please try again.' },
       { status: 400 }
     )
   }

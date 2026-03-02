@@ -1,8 +1,9 @@
 // app/api/media/[id]/route.ts
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
-import { v2 as cloudinary } from 'cloudinary'
+import cloudinary from '@/lib/cloudinary'
 import { revalidatePath } from 'next/cache'
+import { validateOrigin } from '@/lib/security'
 
 type RouteParams = {
   params: Promise<{ id: string }>
@@ -10,6 +11,10 @@ type RouteParams = {
 
 // DELETE /api/media/[id] — delete a single media item (admin only)
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  // CSRF protection
+  const csrfError = validateOrigin(_request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -34,6 +39,15 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
+
+  // Validate UUID format
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid media ID' },
+      { status: 400 }
+    )
+  }
 
   // Fetch the media item to get Cloudinary public_id
   const { data: media, error: fetchError } = await supabase
@@ -63,8 +77,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { error } = await supabase.from('media').delete().eq('id', id)
 
   if (error) {
+    console.error('Failed to delete media:', error.message)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to delete media. Please try again.' },
       { status: 400 }
     )
   }

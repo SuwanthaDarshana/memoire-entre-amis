@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -302,16 +303,16 @@ export default async function LandingPage() {
                 {/* Photo grid mockup */}
                 <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {[
-                    { color: 'from-indigo-200 via-indigo-100 to-blue-100', label: 'Graduation Day', span: 'sm:row-span-2' },
-                    { color: 'from-purple-200 via-purple-100 to-pink-100', label: 'Campus Walk' },
-                    { color: 'from-amber-200 via-amber-100 to-orange-100', label: 'Study Sessions' },
-                    { color: 'from-emerald-200 via-emerald-100 to-teal-100', label: 'Road Trip' },
-                    { color: 'from-rose-200 via-rose-100 to-pink-100', label: 'Farewell Party' },
-                    { color: 'from-sky-200 via-sky-100 to-cyan-100', label: 'Movie Night' },
+                    { src: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&h=1000&fit=crop&q=90', label: 'Graduation Day', span: 'sm:row-span-2' },
+                    { src: 'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop&q=90', label: 'Campus Walk' },
+                    { src: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop&q=90', label: 'Study Sessions' },
+                    { src: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=600&fit=crop&q=90', label: 'Road Trip' },
+                    { src: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&h=600&fit=crop&q=90', label: 'Farewell Party' },
+                    { src: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=600&fit=crop&q=90', label: 'Movie Night' },
                   ].map((card, i) => (
                     <div
                       key={i}
-                      className={`relative rounded-2xl bg-linear-to-br ${card.color} overflow-hidden group cursor-pointer ${card.span || ''}`}
+                      className={`relative rounded-2xl overflow-hidden group cursor-pointer ${card.span || ''}`}
                       style={{
                         aspectRatio: card.span ? '1/1.2' : '4/3',
                         animation: `slideUp 0.5s ease forwards ${0.6 + i * 0.08}s`,
@@ -319,13 +320,17 @@ export default async function LandingPage() {
                         animationFillMode: 'forwards',
                       }}
                     >
-                      <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <Image
+                        src={card.src}
+                        alt={card.label}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 640px) 50vw, 33vw"
+                        unoptimized
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/50 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <span className="text-white text-xs font-semibold drop-shadow-md">{card.label}</span>
-                      </div>
-                      {/* Decorative photo icon */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                        <IconCamera className="w-8 h-8 text-zinc-600" />
                       </div>
                     </div>
                   ))}
@@ -343,7 +348,7 @@ export default async function LandingPage() {
               <IconCamera className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <p className="text-sm font-bold text-zinc-800">248 Photos</p>
+              <p className="text-sm font-bold text-zinc-800">224 Photos</p>
               <p className="text-[11px] text-zinc-400">This semester</p>
             </div>
           </div>
@@ -430,19 +435,26 @@ export default async function LandingPage() {
               {i === 0 && (
                 <div className="mt-6 grid grid-cols-3 gap-2">
                   {[
-                    'from-indigo-200 to-blue-100',
-                    'from-purple-200 to-pink-100',
-                    'from-amber-200 to-orange-100',
-                    'from-emerald-200 to-teal-100',
-                    'from-rose-200 to-pink-100',
-                    'from-sky-200 to-cyan-100',
-                  ].map((gradient, j) => (
+                    { src: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=400&h=400&fit=crop&q=90', alt: 'Graduation' },
+                    { src: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=400&fit=crop&q=90', alt: 'Students' },
+                    { src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=400&fit=crop&q=90', alt: 'Friends' },
+                    { src: 'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=400&h=400&fit=crop&q=90', alt: 'Adventure' },
+                    { src: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=400&fit=crop&q=90', alt: 'Celebration' },
+                    { src: 'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=400&h=400&fit=crop&q=90', alt: 'Campus' },
+                  ].map((img, j) => (
                     <div
                       key={j}
-                      className={`aspect-square rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center`}
+                      className="relative aspect-square rounded-xl overflow-hidden"
                       style={{ animation: `float ${5 + j}s ease-in-out infinite ${j * 0.3}s` }}
                     >
-                      <IconCamera className="w-4 h-4 text-zinc-400/40" />
+                      <Image
+                        src={img.src}
+                        alt={img.alt}
+                        fill
+                        className="object-cover"
+                        sizes="100px"
+                        unoptimized
+                      />
                     </div>
                   ))}
                 </div>
@@ -549,6 +561,7 @@ export default async function LandingPage() {
           <p className="text-xs text-zinc-400 flex items-center gap-1">
             Made with <IconHeart className="w-3.5 h-3.5 text-pink-400" /> for university memories
           </p>
+          <p className='text-xs text-zinc-400'>© {new Date().getFullYear()} CyberDog. All rights reserved.</p>
         </div>
       </footer>
     </div>

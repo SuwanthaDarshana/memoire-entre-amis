@@ -1,9 +1,14 @@
 // app/api/albums/route.ts
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
+import { validateOrigin } from '@/lib/security'
 
 // POST /api/albums — create a new album (admin only)
 export async function POST(request: NextRequest) {
+  // CSRF protection
+  const csrfError = validateOrigin(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -37,6 +42,20 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (title.trim().length > 200) {
+    return NextResponse.json(
+      { success: false, error: 'Title must be under 200 characters' },
+      { status: 400 }
+    )
+  }
+
+  if (description && typeof description === 'string' && description.length > 2000) {
+    return NextResponse.json(
+      { success: false, error: 'Description must be under 2000 characters' },
+      { status: 400 }
+    )
+  }
+
   const { data, error } = await supabase
     .from('albums')
     .insert({
@@ -49,8 +68,9 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) {
+    console.error('Failed to create album:', error.message)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to create album. Please try again.' },
       { status: 400 }
     )
   }

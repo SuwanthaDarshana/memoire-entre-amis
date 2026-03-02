@@ -1,7 +1,8 @@
 // app/api/albums/[id]/route.ts
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
-import { v2 as cloudinary } from 'cloudinary'
+import cloudinary from '@/lib/cloudinary'
+import { validateOrigin } from '@/lib/security'
 
 type RouteParams = {
   params: Promise<{ id: string }>
@@ -9,6 +10,10 @@ type RouteParams = {
 
 // PATCH /api/albums/[id] — update album details (admin only)
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  // CSRF protection
+  const csrfError = validateOrigin(request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -33,6 +38,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
+
+  // Validate UUID format
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid album ID' },
+      { status: 400 }
+    )
+  }
+
   const body = await request.json()
 
   // Only allow updating specific fields
@@ -40,7 +55,16 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (body.title !== undefined) updates.title = body.title.trim()
   if (body.description !== undefined) updates.description = body.description?.trim() || null
   if (body.event_date !== undefined) updates.event_date = body.event_date || null
-  if (body.cover_url !== undefined) updates.cover_url = body.cover_url || null
+  if (body.cover_url !== undefined) {
+    // Validate cover_url is a Cloudinary URL or null
+    if (body.cover_url && !/^https:\/\/res\.cloudinary\.com\//.test(body.cover_url)) {
+      return NextResponse.json(
+        { success: false, error: 'cover_url must be a Cloudinary URL' },
+        { status: 400 }
+      )
+    }
+    updates.cover_url = body.cover_url || null
+  }
 
   const { data, error } = await supabase
     .from('albums')
@@ -50,8 +74,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     .single()
 
   if (error) {
+    console.error('Failed to update album:', error.message)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to update album. Please try again.' },
       { status: 400 }
     )
   }
@@ -61,6 +86,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/albums/[id] — delete album and all its media (admin only)
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  // CSRF protection
+  const csrfError = validateOrigin(_request)
+  if (csrfError) return csrfError
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -85,6 +114,15 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
+
+  // Validate UUID format
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_REGEX.test(id)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid album ID' },
+      { status: 400 }
+    )
+  }
 
   // Fetch all media in this album to clean up Cloudinary
   const { data: mediaItems } = await supabase
@@ -109,8 +147,9 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { error } = await supabase.from('albums').delete().eq('id', id)
 
   if (error) {
+    console.error('Failed to delete album:', error.message)
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to delete album. Please try again.' },
       { status: 400 }
     )
   }
