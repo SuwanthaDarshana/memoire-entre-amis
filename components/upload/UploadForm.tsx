@@ -330,7 +330,7 @@ export default function UploadForm({
             Click to select files
           </p>
           <p className="text-zinc-300 text-xs mt-1">
-            JPG, PNG, WebP, MP4, MOV, WebM — Photos auto-compressed, videos must be under 10MB
+            JPG, PNG, WebP, MP4, MOV, WebM — Photos auto-compressed, videos up to 100MB
           </p>
           <input
             ref={fileInputRef}
