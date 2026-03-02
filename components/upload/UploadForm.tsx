@@ -19,11 +19,11 @@ type AlbumOption = {
 type CloudinaryUploadResponse = {
   secure_url: string;
   public_id: string;
-  thumbnail_url: string;
   width: number;
   height: number;
   duration?: number;
   bytes: number;
+  resource_type: string;
 };
 
 // Type for sign API response
@@ -237,7 +237,7 @@ export default function UploadForm({
         cloudinary_url: uploadData.secure_url,
         cloudinary_public_id: uploadData.public_id,
         thumbnail_url: isVideo
-          ? uploadData.thumbnail_url
+          ? `https://res.cloudinary.com/${signData.cloud_name}/video/upload/${uploadData.public_id}.jpg`
           : uploadData.secure_url,
         media_type,
         caption,
