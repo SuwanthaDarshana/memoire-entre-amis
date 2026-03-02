@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- RULE 3: For admin-only routes, check role ---
-  const adminRoutes = ['/upload', '/admin']
+  const adminRoutes = ['/admin']
   const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route))
 
   if (user && isAdminRoute) {

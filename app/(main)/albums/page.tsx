@@ -14,7 +14,13 @@ export type Album = {
   created_by: string | null
   created_at: string
   updated_at: string
-  media: { count: number }[]   // ← from the media(count) join
+  media: { count: number }[]
+  preview: {
+    id: string
+    cloudinary_url: string
+    thumbnail_url: string | null
+    media_type: string
+  }[]
 }
 
 export default async function AlbumsPage() {
@@ -27,7 +33,8 @@ export default async function AlbumsPage() {
     .from('albums')
     .select(`
       *,
-      media(count)
+      media(count),
+      preview:media(id, cloudinary_url, thumbnail_url, media_type)
     `)
     .order('event_date', { ascending: false })
 

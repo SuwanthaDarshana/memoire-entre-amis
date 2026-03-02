@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import BackButton from "@/components/ui/BackButton";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -75,6 +76,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/dashboard" label="Dashboard" />
       <div>
         <h1 className="page-title">Settings</h1>
         <p className="text-zinc-500 text-sm mt-1">

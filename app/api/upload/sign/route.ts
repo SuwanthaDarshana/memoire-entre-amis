@@ -9,27 +9,14 @@ type SignRequestBody = {
 }
 
 export async function POST(request: NextRequest) {
-  // Verify admin
-  const supabase = await createClient()       // ← await added
+  // Verify authenticated user (any role can upload)
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 401 }
-    )
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json(
-      { success: false, error: 'Forbidden' },
-      { status: 403 }
     )
   }
 

@@ -68,7 +68,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'Dashboard',   href: '/dashboard', iconKey: 'dashboard', isAdminOnly: false },
   { label: 'Albums',      href: '/albums',    iconKey: 'albums',    isAdminOnly: false },
-  { label: 'Upload',      href: '/upload',    iconKey: 'upload',    isAdminOnly: true  },
+  { label: 'Upload',      href: '/upload',    iconKey: 'upload',    isAdminOnly: false },
   { label: 'Admin Panel', href: '/admin',     iconKey: 'admin',     isAdminOnly: true  },
   { label: 'Settings',    href: '/settings',  iconKey: 'settings',  isAdminOnly: false },
 ]

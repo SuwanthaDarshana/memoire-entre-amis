@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -17,7 +18,7 @@ type SaveMediaBody = {
 };
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient(); // ← await added
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -26,19 +27,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 },
-    );
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    return NextResponse.json(
-      { success: false, error: "Forbidden" },
-      { status: 403 },
     );
   }
 
@@ -56,7 +44,10 @@ export async function POST(request: NextRequest) {
     file_size_bytes,
   }: SaveMediaBody = await request.json();
 
-  const { data, error } = await supabase
+  // Use admin client to bypass RLS (auth already verified above)
+  const adminSupabase = createAdminClient();
+
+  const { data, error } = await adminSupabase
     .from("media")
     .insert({
       album_id,

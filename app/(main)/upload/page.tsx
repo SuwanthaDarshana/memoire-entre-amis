@@ -1,10 +1,11 @@
 // app/(main)/upload/page.tsx
-import { requireAdmin } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import UploadForm from '@/components/upload/UploadForm'
+import BackButton from '@/components/ui/BackButton'
 
 export default async function UploadPage() {
-  await requireAdmin()
+  await requireAuth()
 
   const supabase = await createClient()
 
@@ -15,6 +16,7 @@ export default async function UploadPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/dashboard" label="Dashboard" />
       <div>
         <h1 className="page-title">Upload Media</h1>
         <p className="text-zinc-400 text-sm mt-1">

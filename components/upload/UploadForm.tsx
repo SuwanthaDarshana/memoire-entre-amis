@@ -113,7 +113,28 @@ export default function UploadForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const selected = Array.from(e.target.files ?? []); // ← ?? [] fallback if null
+    const selected = Array.from(e.target.files ?? []);
+
+    // Validate video sizes upfront (videos can't be compressed client-side)
+    const oversizedVideos = selected.filter(
+      (f) => f.type.startsWith("video/") && f.size > MAX_FILE_SIZE
+    );
+    if (oversizedVideos.length > 0) {
+      const names = oversizedVideos
+        .map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
+        .join(", ");
+      toast.error(
+        `Videos must be under 10MB. Unlike photos, videos cannot be compressed automatically. Please trim or compress before uploading: ${names}`
+      );
+      // Filter out oversized videos, keep everything else
+      const valid = selected.filter(
+        (f) => !(f.type.startsWith("video/") && f.size > MAX_FILE_SIZE)
+      );
+      setFiles(valid);
+      setProgress(valid.map(() => 0));
+      return;
+    }
+
     setFiles(selected);
     setProgress(selected.map(() => 0));
   }
@@ -279,7 +300,7 @@ export default function UploadForm({
             Click to select files
           </p>
           <p className="text-zinc-300 text-xs mt-1">
-            JPG, PNG, WebP, MP4, MOV, WebM
+            JPG, PNG, WebP, MP4, MOV, WebM — Photos auto-compressed, videos must be under 10MB
           </p>
           <input
             ref={fileInputRef}

@@ -3,6 +3,8 @@ import { requireAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import MediaGrid from '@/components/media/MediaGrid'
+import EditAlbumModal from '@/components/albums/EditAlbumModal'
+import BackButton from '@/components/ui/BackButton'
 import { format } from 'date-fns'
 
 // Type for media row from Supabase
@@ -64,9 +66,22 @@ export default async function AlbumPage({ params }: AlbumPageProps) {
 
   return (
     <div className="space-y-6">
+      <BackButton href="/albums" label="Albums" />
+
       {/* Album header */}
       <div>
-        <h1 className="page-title">{album.title}</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="page-title">{album.title}</h1>
+          {isAdmin && (
+            <EditAlbumModal album={{
+              id: album.id,
+              title: album.title,
+              description: album.description,
+              event_date: album.event_date,
+              cover_url: album.cover_url,
+            }} />
+          )}
+        </div>
         {album.description && (
           <p className="text-zinc-400 mt-1">{album.description}</p>
         )}

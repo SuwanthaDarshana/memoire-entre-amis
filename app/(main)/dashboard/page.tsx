@@ -12,7 +12,7 @@ export default async function DashboardPage() {
 
   const { data: recentAlbums } = await supabase
     .from("albums")
-    .select("*, media(count)")
+    .select("*, media(count), preview:media(id, cloudinary_url, thumbnail_url, media_type)")
     .order("created_at", { ascending: false })
     .limit(6);
 
