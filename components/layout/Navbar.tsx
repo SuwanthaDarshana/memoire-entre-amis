@@ -19,8 +19,8 @@ export default function Navbar({ profile }: { profile: Profile | null }) {
   async function handleSignOut() {
     await supabase.auth.signOut()
     toast.success('Signed out')
-    router.push('/')
     router.refresh()
+    window.location.href = '/'
   }
 
   return (
