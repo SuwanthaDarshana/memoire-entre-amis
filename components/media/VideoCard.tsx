@@ -98,7 +98,7 @@ export default function VideoCard({ video, isAdmin, onDelete }: VideoProps) {
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-              className="absolute top-3 left-3 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-600 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm z-10"
+              className="absolute top-3 left-3 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-600 backdrop-blur-sm flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 shadow-sm z-10"
               title="Delete video"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
